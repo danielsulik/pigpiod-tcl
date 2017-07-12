@@ -1,0 +1,10 @@
+pigpio_start
+bb_serial_read
+i2c_write_device
+i2c_read_device
+i2c_zip
+bb_i2c_zip
+bb_spi_xfer
+spi_xfer
+-gpioCallback
+-gpioCallbackDelete

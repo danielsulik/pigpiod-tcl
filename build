@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Restart using tclsh\
+exec tclsh "$0" "$@"
+
+set PKG_VERSION 1.0
+
+proc main { } {
+  global PKG_VERSION
+
+  cmd swig -tcl -pkgversion $PKG_VERSION pigpiod_tcl.i
+  cmd tclsh swig-replace.tcl pigpiod_tcl_wrap.c
+  cmd gcc -Wall -shared pigpiod_tcl_wrap.c -I/usr/include/tcl \
+          -L/usr/local/lib -pthread -lpigpiod_if2 -lrt -o pigpiod_tcl.so
+
+  puts "Making pkgIndex"
+  pkg_mkIndex . pigpiod_tcl.so *.tcl
+
+  puts "Installing..."
+  foreach dir $::auto_path {
+    if { [file isdirectory $dir] } {
+      puts " Using $dir"
+      set target [file join $dir pigpiod_tcl$PKG_VERSION]
+      puts "    Creating $target"
+      file mkdir $target
+      puts "    pigpiod_tcl.so -> [file join $target pigpiod_tcl.so]"
+      file copy -force pigpiod_tcl.so $target
+      puts "    pkgIndex.tcl -> [file join $target pkgIndex.tcl]"
+      file copy -force pkgIndex.tcl $target
+      puts "    utils.tcl -> [file join $target utils.tcl]"
+      file copy -force utils.tcl $target
+      puts "done"
+      break
+    }
+  }
+}
+
+proc cmd { args } {
+  puts -nonewline "Running: $args ... "
+  flush stdout
+  if { [catch "eval exec $args" result] } {
+    puts "FAILED!"
+    puts "Message was:"
+    puts "$result"
+    exit 1
+  } else {
+    puts " ok"
+  }
+}
+
+main

@@ -1,0 +1,1 @@
+package provide pigpiod_tcl 1.0
